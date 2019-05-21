@@ -30,9 +30,9 @@ def changeWinIP():
                 print('当前网络信息')
                 print('网卡: %s'%nic.Description)
                 print('IP: %s'%nic.IPAddress[0])
-                print('子网掩码：%s'%nic.IPSubnet[0])
-                print('网关:%s'%nic.DefaultIPGateway[0])
-                print('DNS:%s, %s'%(nic.DNSServerSearchOrder[0], nic.DNSServerSearchOrder[0]))
+                print('子网掩码: %s'%nic.IPSubnet[0])
+                print('网关: %s'%nic.DefaultIPGateway[0])
+                print('DNS: %s, %s'%(nic.DNSServerSearchOrder[0], nic.DNSServerSearchOrder[1]))
                 print('-----------------------------------------------')
 
                 # Set IP address, subnetmask and default gateway
@@ -49,31 +49,33 @@ def changeWinIP():
                     print('网卡: %s'%nic.Description)
                     print('IP: %s'%ip)
                     print('子网掩码：%s'%subnetmask)
-                    print('网关:%s'%gateway)
-                    print('DNS:%s'%dns)
+                    print('网关: %s'%gateway)
+                    print('DNS: %s, %s'%(dns[0], dns[1]))
                     print('-----------------------------------------------')
                 else:
                     print('设置失败!')
     else:
         print('error,id is empty!')
 
+def parseYamlFile(filePath, fileName):
+    yamlPath = os.path.join(filePath, fileName)
+    f = open(yamlPath, 'r', encoding='utf-8')
+    inputCont = f.read()
+    cont = yaml.load(inputCont, Loader=yaml.FullLoader)
+    return cont
+
 if __name__ == '__main__':
+    #curPath = os.path.dirname(os.path.realpath(__file__))
+    filePath = os.path.abspath('.')
+    fileName = 'ip_config.yaml'
+    cont = parseYamlFile(filePath, fileName)
 
     ipType = sys.argv[1]
     print('网络类型： %s'%ipType)
-
-    #curPath = os.path.dirname(os.path.realpath(__file__))
-    filePath = os.path.abspath('.')
-    yamlPath = os.path.join(filePath,'ip_config.yaml')
-    f = open(yamlPath, 'r', encoding='utf-8')
-    cont = f.read()
-    #yaml.load(input, Loader=yaml.FullLoader)
-    x = yaml.load(cont, Loader=yaml.FullLoader)
-
-    ip = x[ipType]['IP']
-    subnetmask = x[ipType]['IPSubnet']
-    gateway = x[ipType]['Gateway']
-    dnsAry = x[ipType]['DNS'].split(',')
+    ip = cont[ipType]['IP']
+    subnetmask = cont[ipType]['IPSubnet']
+    gateway = cont[ipType]['Gateway']
+    dnsAry = cont[ipType]['DNS'].split(',')
     dns = [dnsAry[0].strip(), dnsAry[1].strip()]
 
     changeWinIP()
