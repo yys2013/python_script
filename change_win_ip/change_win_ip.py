@@ -10,15 +10,16 @@ ip = u'192.168.67.11'
 subnetmask = u'255.255.240.0'
 gateway = u'192.168.64.254'
 #dns = u'202.96.209.5'
-dns = [u'202.96.209.5', u'8.8.8.8']
+dns = [u'202.1.11.5', u'8.8.8.8']
+mac = '123'
 
 def changeWinIP():
-    net_label = 'WLAN'
     wlan_int_id = None
     for nic in wmi.WMI().Win32_NetworkAdapter():
-        if nic.NetConnectionID == net_label:
+        print(nic.NetConnectionID)
+        if nic.MACAddress == mac:
             wlan_int_id = nic.Index
-            print('找到需要修改的无线网卡:::' + net_label)
+            print('找到需要修改的网卡:::' + nic.NetConnectionID)
             break
 
     if wlan_int_id != None:
@@ -29,14 +30,21 @@ def changeWinIP():
                 print('-----------------------------------------------')
                 print('当前网络信息')
                 print('网卡: %s'%nic.Description)
-                print('IP: %s'%nic.IPAddress[0])
-                print('子网掩码: %s'%nic.IPSubnet[0])
-                print('网关: %s'%nic.DefaultIPGateway[0])
-                print('DNS: %s, %s'%(nic.DNSServerSearchOrder[0], nic.DNSServerSearchOrder[1]))
+                print('IP: %s' % nic.IPAddress[0])
+                try:
+                    print('子网掩码: %s' % nic.IPSubnet[0])
+                except Exception:
+                    print('子网掩码: 无')
+                try:
+                    print('网关: %s'%nic.DefaultIPGateway[0])
+                except Exception:
+                    print('网关: 无')
+                try:
+                    print('DNS: %s, %s'%(nic.DNSServerSearchOrder[0], nic.DNSServerSearchOrder[1]))
+                except Exception:
+                    print('DNS: 无')
                 print('-----------------------------------------------')
 
-                # Set IP address, subnetmask and default gateway
-                # Note: EnableStatic() and SetGateways() methods require *lists* of values to be passed
                 ret1 = nic.EnableStatic(IPAddress=[ip], SubnetMask=[subnetmask])
                 ret2 = nic.SetGateways(DefaultIPGateway=[gateway])
                 ret3 = nic.SetDNSServerSearchOrder(DNSServerSearchOrder=dns)
@@ -70,12 +78,14 @@ if __name__ == '__main__':
     fileName = 'ip_config.yaml'
     cont = parseYamlFile(filePath, fileName)
 
-    ipType = sys.argv[1]
+    print('请输入网络类型')
+    ipType = input()
     print('网络类型： %s'%ipType)
     ip = cont[ipType]['IP']
     subnetmask = cont[ipType]['IPSubnet']
     gateway = cont[ipType]['Gateway']
     dnsAry = cont[ipType]['DNS'].split(',')
     dns = [dnsAry[0].strip(), dnsAry[1].strip()]
+    mac=cont[ipType]['MAC']
 
     changeWinIP()
